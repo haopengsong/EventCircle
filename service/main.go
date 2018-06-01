@@ -17,9 +17,6 @@ import (
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-
-
-
 )
 
 var mySigningKey = []byte("secret")
@@ -46,7 +43,7 @@ const (
 	PROJECT_ID = "ultra-might-203710"
 	BT_INSTANCE = "circle-post"
 	// Needs to update this URL if you deploy it to cloud.
-	ES_URL = "http://35.185.120.181:9200"
+	ES_URL = "http://35.237.6.51:9200"
 	BUCKET_NAME = "post-images-ultra-might-203710"
 )
 
@@ -187,11 +184,22 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	//id := uuid.New()
 	//// Save to ES.
 	//saveToES(&p, id)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 
+	if r.Method != "POST" {
+		return
+	}
+
 	user := r.Context().Value("user")
+	if user == nil {
+		m := fmt.Sprintf("Unable to find user in context")
+		fmt.Println(m)
+		http.Error(w, m, http.StatusBadRequest)
+		return
+	}
 	claims := user.(*jwt.Token).Claims
 	username := claims.(jwt.MapClaims)["username"]
 
@@ -223,10 +231,9 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Image is not available %v.\n", err)
 		return
 	}
-	defer file.Close()
 
 	ctx := context.Background()
-
+	defer file.Close()
 	//GCS
 	// replace it with your real bucket name.
 	_, attrs, err := saveToGCS(ctx, file, BUCKET_NAME, id)

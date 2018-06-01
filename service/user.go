@@ -100,11 +100,15 @@ func addUser(username, password string) bool {
 // If signup is successful, a new session is created.
 func signupHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one signup request")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "text/plain")
 
 	decoder := json.NewDecoder(r.Body)
 	var u User
 	if err := decoder.Decode(&u); err != nil {
-		panic(err)
+		m := fmt.Sprintf("Failed to parse body %v", r.Body)
+		fmt.Println(m)
+		http.Error(w, m, http.StatusBadRequest)
 		return
 	}
 
@@ -120,19 +124,20 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Empty password or username.")
 		http.Error(w, "Empty password or username", http.StatusInternalServerError)
 	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 // If login is successful, a new token is created.
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one login request")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "text/plain")
 
 	decoder := json.NewDecoder(r.Body)
 	var u User
 	if err := decoder.Decode(&u); err != nil {
-		panic(err)
+		m := fmt.Sprintf("Failed to parse body %v", r.Body)
+		fmt.Println(m)
+		http.Error(w, m, http.StatusBadRequest)
 		return
 	}
 
@@ -152,8 +157,5 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Invalid password or username.")
 		http.Error(w, "Invalid password or username", http.StatusForbidden)
 	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
