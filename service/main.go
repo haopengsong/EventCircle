@@ -17,7 +17,8 @@ import (
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
+	
+	
 )
 
 var mySigningKey = []byte("secret")
@@ -92,18 +93,32 @@ func main() {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	handler := cors.Default().Handler(r)
+
 
 	r.Handle("/post", jwtMiddleware.Handler(http.HandlerFunc(handlerPost))).Methods("POST")
+	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(PreflightHandle))).Methods("OPTIONS")
 	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(handlerSearch))).Methods("GET")
 	r.Handle("/login", http.HandlerFunc(loginHandler)).Methods("POST")
 	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
 
 	http.Handle("/", r)
 
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 
+}
+
+func PreflightHandle(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("received an OPTIONS request")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == "OPTIONS" {
+    	w.WriteHeader(http.StatusOK)
+    	return
+	}
 }
 
 func handlerSearch (w http.ResponseWriter, r *http.Request) {
@@ -112,10 +127,13 @@ func handlerSearch (w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	//w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
-	// if r.Method != "GET" {
-	// 	return
-	// }
+
+
+	if r.Method != "GET" {
+		return
+	}
 
 	lat := r.URL.Query().Get("lat")
 	lt , _ := strconv.ParseFloat(lat, 64)
