@@ -113,9 +113,9 @@ func handlerSearch (w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 
-	if r.Method != "GET" {
-		return
-	}
+	// if r.Method != "GET" {
+	// 	return
+	// }
 
 	lat := r.URL.Query().Get("lat")
 	lt , _ := strconv.ParseFloat(lat, 64)
