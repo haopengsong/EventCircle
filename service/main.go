@@ -103,7 +103,16 @@ func main() {
 }
 
 func handlerSearch (w http.ResponseWriter, r *http.Request) {
+	
 	fmt.Println("received a search request")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+
+	if r.Method != "GET" {
+		return
+	}
+
 	lat := r.URL.Query().Get("lat")
 	lt , _ := strconv.ParseFloat(lat, 64)
 	lon := r.URL.Query().Get("lon")
@@ -165,8 +174,6 @@ func handlerSearch (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(js)
 }
 
