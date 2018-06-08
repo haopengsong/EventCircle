@@ -95,11 +95,13 @@ func main() {
 
 
 
-	r.Handle("/post", jwtMiddleware.Handler(http.HandlerFunc(handlerPost))).Methods("POST")
-	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(PreflightHandle))).Methods("OPTIONS")
-	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(handlerSearch))).Methods("GET")
-	r.Handle("/login", http.HandlerFunc(loginHandler)).Methods("POST")
-	r.Handle("/signup", http.HandlerFunc(signupHandler)).Methods("POST")
+	r.Handle("/post", jwtMiddleware.Handler(http.HandlerFunc(handlerPost)))
+	//.Methods("POST")
+	//r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(PreflightHandle))).Methods("OPTIONS")
+	r.Handle("/search", jwtMiddleware.Handler(http.HandlerFunc(handlerSearch)))
+	//.Methods("GET")
+	r.Handle("/login", http.HandlerFunc(loginHandler))
+	r.Handle("/signup", http.HandlerFunc(signupHandler))
 
 	http.Handle("/", r)
 
@@ -108,18 +110,18 @@ func main() {
 
 }
 
-func PreflightHandle(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("received an OPTIONS request")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
-	w.Header().Set("Content-Type", "application/json")
+// func PreflightHandle(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Println("received an OPTIONS request")
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+// 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+// 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+// 	w.Header().Set("Content-Type", "application/json")
 
-	if r.Method == "OPTIONS" {
-    	w.WriteHeader(http.StatusOK)
-    	return
-	}
-}
+// 	if r.Method == "OPTIONS" {
+//     	w.WriteHeader(http.StatusOK)
+//     	return
+// 	}
+// }
 
 func handlerSearch (w http.ResponseWriter, r *http.Request) {
 	
@@ -202,18 +204,6 @@ func handlerSearch (w http.ResponseWriter, r *http.Request) {
 
 
 func handlerPost(w http.ResponseWriter, r *http.Request) {
-	// Parse from body of request to get a json object.
-	//fmt.Println("Received one post request")
-	//decoder := json.NewDecoder(r.Body)
-	//var p Post
-	//if err := decoder.Decode(&p); err != nil {
-	//	panic(err)
-	//	return
-	//}
-	//id := uuid.New()
-	//// Save to ES.
-	//saveToES(&p, id)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
@@ -232,9 +222,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	claims := user.(*jwt.Token).Claims
 	username := claims.(jwt.MapClaims)["username"]
 
-
-
-	// 32 << 20 is the maxMemory param for ParseMultipartForm, equals to 32MB (1MB = 1024 * 1024 bytes = 2^20 bytes)
+	// 32 << 20 is the maxMemory param for ParseMultipartForm
 	// After you call ParseMultipartForm, the file will be saved in the server memory with maxMemory size.
 	// If the file size is larger than maxMemory, the rest of the data will be saved in a system temporary file.
 	r.ParseMultipartForm(32 << 20)
@@ -262,9 +250,8 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
+
 	defer file.Close()
-	//GCS
-	// replace it with your real bucket name.
 	_, attrs, err := saveToGCS(ctx, file, BUCKET_NAME, id)
 	if err != nil {
 		http.Error(w, "GCS is not setup", http.StatusInternalServerError)
@@ -279,9 +266,9 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	saveToES(p, id)
 
 	// Save to BigTable.
-	//saveToBigTable(p, id)
-
-
+	// if ENABLE_BIGTABLE {
+	// 	go saveToBigTable(p, id)
+	// }
 }
 
 // Save a post to ElasticSearch
